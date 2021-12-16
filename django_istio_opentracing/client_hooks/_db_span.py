@@ -1,14 +1,14 @@
-from opentracing.span import Span
-from django_istio_opentracing import tracer
+# from opentracing.span import Span
+# from django_istio_opentracing import tracer
+from opentracing import tracer
 from ._const import TRANS_TAGS
 import opentracing
 from opentracing.ext import tags
-from typing import Union
 
 
 def db_span(
-    self, span: Union[Span, None], query: str, span_tag={}, db_type="SQL"
-) -> Span:
+    self, span, query, span_tag={}, db_type="SQL"
+):
     """
     Span for database
     """
@@ -36,7 +36,7 @@ def db_span(
         db = self._conn_params["safe_kwargs"].get("db", " ")
         span_tag[
             tags.PEER_ADDRESS
-        ] = f"{self._module_name}://{host}:{port}/{db}"
+        ] = "%s://%s:%s/%s" %(self._module_name,host,port,db)
 
     return start_child_span(
         operation_name=operation, tracer=tracer, parent=span, span_tag=span_tag
@@ -45,7 +45,7 @@ def db_span(
 
 def redis_span(
     self, span, operation, statement, db_instance, db_type="redis"
-) -> Span:
+):
     """
     Span for redis
     """
@@ -77,7 +77,7 @@ def redis_span(
         span_tag["event"] = "error"
         print("redis_span_errors", repr(e))
 
-    span_tag[tags.PEER_ADDRESS] = f"redis://:{host}:{port}/{db}"
+    span_tag[tags.PEER_ADDRESS] = "redis://:%s:%s/%s"%(host,port,db)
     span_tag["redis.username"] = username
     span_tag["redis.max_connections"] = max_connections
 
@@ -87,7 +87,7 @@ def redis_span(
 
 
 def start_child_span(
-    operation_name: str, tracer=None, parent=None, span_tag=None
+    operation_name, tracer=None, parent=None, span_tag=None
 ):
     """
     Start a new span as a child of parent_span. If parent_span is None,

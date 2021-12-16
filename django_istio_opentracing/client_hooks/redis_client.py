@@ -11,8 +11,8 @@ else:
 from ._db_span import redis_span
 from ._const import REDIS
 from django_istio_opentracing import get_current_span
-from django_istio_opentracing import tracer
-
+# from django_istio_opentracing import tracer
+from opentracing import tracer
 try:
     import ujson as json
 except Exception:
@@ -34,7 +34,6 @@ def execute_command_wrapper(self, *args, **options):
         cmd = str(args[0])
         statement = json.dumps(dict(cmd=cmd, args=list(map(str, args))))
     except Exception as e:
-        print(f"opentracing-error {repr(e)}")
         return _execute_command(self, *args, **options)
     else:
         with redis_span(

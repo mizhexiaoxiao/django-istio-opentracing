@@ -1,4 +1,5 @@
 __name__ = "django_istio_opentracing"
+import opentracing
 from opentracing.scope_managers import ThreadLocalScopeManager
 from opentracing.propagation import Format
 from jaeger_client import Config
@@ -8,23 +9,26 @@ import os
 project_name = os.getenv("PROJECT_NAME", "PROJECT_NAME")
 namespace = os.getenv("NAMESPACE", "NAMESPACE")
 
-config = Config(
-    config={
-        "sampler": {"type": "const", "param": 1},
-        "logging": False,
-        "reporter_queue_size": 2000,
-        "propagation": "b3",  # Compatible with istio
-        "generate_128bit_trace_id": True,  # Compatible with istio
-    },
-    service_name=f"{project_name}.{namespace}",
-    scope_manager=ThreadLocalScopeManager(),
-    validate=True,
-)
 
-tracer = config.initialize_tracer()
+def init_global_tracer():
+    config = Config(
+        config={
+            "sampler": {"type": "const", "param": 1},
+            "logging": False,
+            "reporter_queue_size": 2000,
+            "propagation": "b3",  # Compatible with istio
+            "generate_128bit_trace_id": True,  # Compatible with istio
+        },
+        service_name="%s.%s"%(project_name,namespace),
+        scope_manager=ThreadLocalScopeManager(),
+        validate=True,
+    )
+    tracer = opentracing.tracer
+    tracer = config.initialize_tracer()
 
 
 def get_opentracing_span_headers():
+    from opentracing import tracer
     scope = tracer.scope_manager.active
     carrier = {}
     if scope is not None:
@@ -38,6 +42,7 @@ def get_opentracing_span_headers():
 
 
 def get_current_span():
+    from opentracing import tracer
     scope = tracer.scope_manager.active
     if scope is not None:
         return scope.span
