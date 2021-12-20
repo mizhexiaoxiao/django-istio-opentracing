@@ -3,10 +3,10 @@ try:
 except ImportError:
     pass
 else:
-    _execute_command = redis.Redis.execute_command
-    _pipeline = redis.Redis.pipeline
-    _pipe_execute_command = redis.client.Pipeline.execute_command
-    _pipe_execute = redis.client.Pipeline.execute
+    _execute_command = redis.StrictRedis.execute_command
+    _pipeline = redis.StrictRedis.pipeline
+    _pipe_execute_command = redis.client.BasePipeline.execute_command
+    _pipe_execute = redis.client.BasePipeline.execute
 
 from ._db_span import redis_span
 from ._const import REDIS
@@ -78,7 +78,7 @@ def install_patch():
     if any(item not in globals() for item in items):
         raise Exception("redis install fail")
 
-    redis.Redis.execute_command = execute_command_wrapper
-    redis.Redis.pipeline = pipeline_wrapper
-    redis.client.Pipeline.execute_command = pipe_execute_command_wrapper
-    redis.client.Pipeline.execute = pipe_execute_wrapper
+    redis.StrictRedis.execute_command = execute_command_wrapper
+    redis.StrictRedis.pipeline = pipeline_wrapper
+    redis.client.BasePipeline.execute_command = pipe_execute_command_wrapper
+    redis.client.BasePipeline.execute = pipe_execute_wrapper
