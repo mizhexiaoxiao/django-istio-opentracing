@@ -80,7 +80,11 @@ class Middleware:
             # a child span. It will use the incoming traceid and
             # spanid. We do this to propagate the headers verbatim.
             rpc_tag = {tags.SPAN_KIND: tags.SPAN_KIND_RPC_SERVER}
+            
+            # application tag
             rpc_tag["framework"] = "Django"
+            rpc_tag["uri"] = request.build_absolute_uri().split("?")[0]
+
             span = tracer.start_span(
                 operation_name="opentracing-middleware",
                 child_of=span_ctx,
